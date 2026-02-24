@@ -41,19 +41,20 @@ resource "aws_codedeploy_deployment_group" "this" {
     service_name = var.service_name
   }
 
-  load_balancer_info {
-    target_group_pair_info {
-      target_groups {
-        name = var.blue_tg_name
-      }
+load_balancer_info {
+  target_group_pair_info {
 
-      target_groups {
-        name = var.green_tg_name
-      }
+    target_group {       # singular
+      name = var.blue_tg_name
+    }
 
-      prod_traffic_route {
-        listener_arns = [var.listener_arn]
-      }
+    target_group {       # singular
+      name = var.green_tg_name
+    }
+
+    prod_traffic_route {
+      listener_arns = [var.listener_arn]
     }
   }
+}
 }

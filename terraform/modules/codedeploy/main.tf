@@ -1,4 +1,4 @@
-resource "aws_codedeploy_app" "this" {
+  resource "aws_codedeploy_app" "this" {
   name             = "${var.project_name}-codedeploy-app"
   compute_platform = "ECS"
 }
@@ -7,6 +7,12 @@ resource "aws_codedeploy_deployment_group" "this" {
   app_name              = aws_codedeploy_app.this.name
   deployment_group_name = "${var.project_name}-dg"
   service_role_arn      = var.codedeploy_role_arn
+
+  # Required for ECS Blue/Green deployments
+  deployment_style {
+    deployment_type   = "BLUE_GREEN"
+    deployment_option = "WITH_TRAFFIC_CONTROL"
+  }
 
   deployment_config_name = "CodeDeployDefault.ECSCanary10Percent5Minutes"
 
@@ -20,6 +26,14 @@ resource "aws_codedeploy_deployment_group" "this" {
       action                          = "TERMINATE"
       termination_wait_time_in_minutes = 5
     }
+
+    deployment_ready_option {
+      action_on_timeout = "CONTINUE_DEPLOYMENT"
+    }
+
+    green_fleet_provisioning_option {
+      action = "DISCOVER_EXISTING"
+    }
   }
 
   ecs_service {
@@ -29,12 +43,11 @@ resource "aws_codedeploy_deployment_group" "this" {
 
   load_balancer_info {
     target_group_pair_info {
-
-      target_group {
+      target_groups {
         name = var.blue_tg_name
       }
 
-      target_group {
+      target_groups {
         name = var.green_tg_name
       }
 

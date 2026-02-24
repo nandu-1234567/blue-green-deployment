@@ -1,19 +1,34 @@
-Strapi Blue/Green Deployment on AWS – Process Guide
+Strapi Blue/Green Deployment on AWS
 
-This document outlines the end-to-end process for deploying a Strapi application on AWS using ECS Fargate, Application Load Balancer (ALB), and CodeDeploy Blue/Green deployments. The goal is to achieve zero-downtime deployments with automated rollback in case of failures.
+This repository contains the process and Terraform/AWS configuration for deploying a Strapi application on AWS using ECS Fargate, Application Load Balancer (ALB), and CodeDeploy with a Blue/Green deployment strategy. The setup ensures zero-downtime deployments with automated rollback in case of failures.
 
-1. Plan the Deployment Architecture
+Table of Contents
 
-Decide to use ECS Fargate to run containers without managing servers.
+Architecture Overview
 
-Deploy Strapi as a containerized application.
+AWS Infrastructure Setup
 
-Use an Application Load Balancer (ALB) to route traffic.
+Blue/Green Deployment with CodeDeploy
 
-Implement Blue/Green deployment strategy using CodeDeploy to avoid downtime.
+Security Configuration
 
-2. Set Up AWS Infrastructure
+Deployment Workflow
 
+Post-Deployment Steps
+
+Benefits
+
+Architecture Overview
+
+ECS Fargate is used to run Strapi containers without managing servers.
+
+Application Load Balancer (ALB) routes traffic to ECS tasks.
+
+Blue/Green deployment strategy with CodeDeploy ensures zero downtime.
+
+Two target groups (Blue & Green) handle traffic routing during deployment.
+
+AWS Infrastructure Setup
 VPC and Networking
 
 Create or use an existing VPC with subnets in multiple availability zones for high availability.
@@ -22,9 +37,9 @@ Set up security groups for ECS tasks and ALB.
 
 ECS Cluster and Service
 
-Create an ECS cluster with the Fargate launch type.
+Create an ECS cluster with Fargate launch type.
 
-Define an ECS service to run Strapi tasks.
+Define an ECS service for Strapi tasks.
 
 Configure the service to register tasks with the ALB target groups.
 
@@ -32,95 +47,99 @@ Application Load Balancer (ALB)
 
 Set up an ALB to distribute traffic across ECS tasks.
 
-Configure the ALB listener to accept HTTP and HTTPS traffic.
+Configure listeners for HTTP (80) and HTTPS (443).
 
-Create two target groups: one for the blue environment, one for the green environment.
+Create two target groups:
 
-Configure health checks for the target groups to ensure traffic only goes to healthy tasks.
+Blue Target Group – current production environment
+
+Green Target Group – staging/next release environment
+
+Configure health checks to ensure traffic is only routed to healthy tasks.
 
 ECS Task Definition
 
 Define a placeholder ECS task definition for the Strapi container.
 
-Ensure it can be updated dynamically with new container images for deployments.
+Allow dynamic updates for new container image deployments.
 
-3. Set Up CodeDeploy for Blue/Green Deployment
+Blue/Green Deployment with CodeDeploy
+Create CodeDeploy Application
 
-Create a CodeDeploy Application
+Select ECS as the compute platform.
 
-Choose ECS as the compute platform.
+Create Deployment Group
 
-Create a CodeDeploy Deployment Group
+Assign to ECS cluster and service.
 
-Assign the deployment group to the ECS cluster and service.
+Attach a CodeDeploy service role with permissions for ECS and ALB.
 
-Attach the CodeDeploy service role with permissions to manage ECS and ALB resources.
+Deployment Strategy
 
-Configure Deployment Strategy
+Canary: e.g., 10% traffic for 5 minutes
 
-Use Canary (10% traffic, 5 minutes) or AllAtOnce strategies.
+AllAtOnce: shifts all traffic at once
 
-Set automatic rollback in case of deployment failure.
+Enable automatic rollback for deployment failures.
 
-Configure CodeDeploy to terminate old tasks after a successful deployment.
+Terminate old tasks after successful deployment.
 
-Configure Traffic Routing
+Traffic Routing
 
-Map the ALB listener to the Blue and Green target groups.
+Map ALB listener to Blue and Green target groups.
 
-During deployment, CodeDeploy switches traffic between the blue and green environments.
+CodeDeploy switches traffic between Blue and Green during deployment.
 
-4. Security Configuration
-
+Security Configuration
 ALB Security Group
 
-Allow inbound HTTP (port 80) and HTTPS (port 443) from the internet.
+Allow inbound HTTP (80) and HTTPS (443) from the internet.
 
 ECS Security Group
 
-Allow traffic from the ALB on the Strapi port (typically 1337).
+Allow traffic from ALB on Strapi port (default 1337).
 
 IAM Roles
 
-ECS Execution Role: Grants ECS tasks permissions to pull images and interact with AWS services.
+ECS Execution Role: Permissions to pull images and interact with AWS services.
 
-CodeDeploy Role: Grants CodeDeploy permission to manage ECS, ALB, and tasks.
+CodeDeploy Role: Permissions to manage ECS, ALB, and tasks.
 
-Ensure users deploying via Terraform or CI/CD have iam:PassRole permission for these roles.
+Ensure users deploying via Terraform/CI-CD have iam:PassRole for these roles.
 
-5. Deployment Workflow
+Deployment Workflow
 
-Build and push the Strapi Docker image to your container registry (ECR or public).
+Build and push Strapi Docker image to a container registry (ECR or public).
 
-Update the ECS task definition with the new image version.
+Update ECS task definition with the new image version.
 
 Trigger CodeDeploy deployment:
 
-CodeDeploy launches tasks in the green target group.
+CodeDeploy launches tasks in the Green target group.
 
-Performs health checks to ensure new tasks are running correctly.
+Performs health checks to validate new tasks.
 
-Gradually shifts traffic from blue to green according to the deployment strategy.
+Gradually shifts traffic from Blue to Green according to strategy.
 
-Terminates old blue tasks after successful traffic shift.
+Terminates old Blue tasks after a successful traffic shift.
 
-Monitor deployment for any failures. Automatic rollback occurs if the deployment fails.
+Monitor deployment for failures. Automatic rollback occurs if the deployment fails.
 
-6. Post-Deployment
+Post-Deployment Steps
 
-Test the Strapi application via the ALB DNS to ensure traffic is routed correctly.
+Test Strapi application via the ALB DNS to ensure traffic is correctly routed.
 
-Update the ECS task definition for future releases.
+Update ECS task definitions for future releases.
 
-Monitor application logs and CloudWatch metrics to verify performance and health.
+Monitor logs and CloudWatch metrics for performance and health.
 
-7. Benefits of This Approach
+Benefits
 
-Zero-downtime deployments with Blue/Green strategy.
+Zero-downtime deployments using Blue/Green strategy.
 
 Automated rollback on deployment failure.
 
 Scalable ECS Fargate architecture with minimal server management.
 
-Traffic safety through ALB health checks and Canary deployment strategies.
+Safe traffic routing through ALB health checks and canary strategies.
 

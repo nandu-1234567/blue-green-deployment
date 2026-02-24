@@ -1,11 +1,11 @@
 output "blue_tg_name" {
-  value = aws_lb_target_group.blue.name
+  value = var.blue_tg_name
 }
 
 output "green_tg_name" {
-  value = aws_lb_target_group.green.name
+  value = var.green_tg_name
 }
 
 output "listener_arn" {
-  value = aws_lb_listener.http.arn
+  value = var.listener_arn
 }

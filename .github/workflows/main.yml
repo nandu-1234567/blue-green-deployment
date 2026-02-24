@@ -26,9 +26,11 @@ jobs:
 
       - name: Terraform Init
         run: terraform init
+        working-directory: terraform
 
       - name: Terraform Plan
         run: terraform plan
+        working-directory: terraform
 
       - name: Terraform Apply
         run: |
@@ -38,3 +40,4 @@ jobs:
             -var="image_uri=public.ecr.aws/docker/library/nginx:latest" \
             -var="execution_role_arn=${{ secrets.ECS_EXECUTION_ROLE_ARN }}" \
             -var="codedeploy_role_arn=${{ secrets.CODEDEPLOY_ROLE_ARN }}"
+        working-directory: terraform

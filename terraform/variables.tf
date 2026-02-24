@@ -15,5 +15,6 @@ variable "execution_role_arn" {
 }
 
 variable "codedeploy_role_arn" {
-  type = string
+  description = "ARN of the CodeDeploy role"
+  type        = string
 }

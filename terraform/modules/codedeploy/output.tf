@@ -1,11 +1,7 @@
-output "blue_tg_name" {
-  value = var.blue_tg_name
+output "app_name" {
+  value = aws_codedeploy_app.this.name
 }
 
-output "green_tg_name" {
-  value = var.green_tg_name
-}
-
-output "listener_arn" {
-  value = var.listener_arn
+output "deployment_group_name" {
+  value = aws_codedeploy_deployment_group.this.deployment_group_name
 }

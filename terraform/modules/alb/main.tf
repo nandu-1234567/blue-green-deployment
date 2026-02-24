@@ -44,7 +44,7 @@ resource "aws_lb_target_group" "green" {
   }
 }
 
-# HTTP Listener
+# HTTP Listener (initially forwards to blue TG)
 resource "aws_lb_listener" "http" {
   load_balancer_arn = aws_lb.this.arn
   port              = 80
@@ -52,6 +52,23 @@ resource "aws_lb_listener" "http" {
 
   default_action {
     type             = "forward"
-    target_group_arn = aws_lb_target_group_arn
+    target_group_arn = aws_lb_target_group.blue.arn
   }
+}
+
+# Outputs for other modules (like CodeDeploy)
+output "alb_arn" {
+  value = aws_lb.this.arn
+}
+
+output "blue_tg_name" {
+  value = aws_lb_target_group.blue.name
+}
+
+output "green_tg_name" {
+  value = aws_lb_target_group.green.name
+}
+
+output "listener_arn" {
+  value = aws_lb_listener.http.arn
 }

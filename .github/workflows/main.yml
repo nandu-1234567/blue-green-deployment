@@ -29,15 +29,19 @@ jobs:
         working-directory: terraform
 
       - name: Terraform Plan
-        run: terraform plan
+        run: terraform plan \
+          -var="aws_region=us-east-1" \
+          -var="project_name=my-strapi" \
+          -var="image_uri=public.ecr.aws/docker/library/nginx:latest" \
+          -var="execution_role_arn=arn:aws:iam::811738710312:role/ecsExecutionRole" \
+          -var="codedeploy_role_arn=arn:aws:iam::811738710312:role/codedeployRole"
         working-directory: terraform
 
       - name: Terraform Apply
-        run: |
-          terraform apply -auto-approve \
-            -var="aws_region=us-east-1" \
-            -var="project_name=my-strapi" \
-            -var="image_uri=public.ecr.aws/docker/library/nginx:latest" \
-            -var "execution_role_arn=arn:aws:iam:811738710312:role/ecsExecutionRole" \
-            -var "codedeploy_role_arn=arn:aws:ia:811738710312:role/codedeployRole"
+        run: terraform apply -auto-approve \
+          -var="aws_region=us-east-1" \
+          -var="project_name=my-strapi" \
+          -var="image_uri=public.ecr.aws/docker/library/nginx:latest" \
+          -var="execution_role_arn=arn:aws:iam::811738710312:role/ecsExecutionRole" \
+          -var="codedeploy_role_arn=arn:aws:iam::811738710312:role/codedeployRole"
         working-directory: terraform

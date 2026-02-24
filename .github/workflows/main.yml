@@ -35,7 +35,7 @@ jobs:
             -var="project_name=my-strapi" \
             -var="image_uri=public.ecr.aws/docker/library/nginx:latest" \
             -var="execution_role_arn=arn:aws:iam::811738710312:role/ecsExecutionRole" \
-            -var="codedeploy_role_arn=arn:aws:iam::811738710312:role/codedeployRole"
+            -var="codedeploy_role_arn=arn:aws:iam::811738710312:role/codedeploy_role"
         working-directory: terraform
 
       - name: Terraform Apply
@@ -45,5 +45,5 @@ jobs:
             -var="project_name=my-strapi" \
             -var="image_uri=public.ecr.aws/docker/library/nginx:latest" \
             -var="execution_role_arn=arn:aws:iam::811738710312:role/ecsExecutionRole" \
-            -var="codedeploy_role_arn=arn:aws:iam::811738710312:role/codedeployRole"
+            -var="codedeploy_role_arn=arn:aws:iam::811738710312:role/codedeploy_role"
         working-directory: terraform

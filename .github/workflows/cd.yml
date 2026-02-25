@@ -34,14 +34,15 @@ jobs:
       - name: Get Current Task Definition
         run: |
           aws ecs describe-task-definition \
-          --task-definition $TASK_FAMILY \
-          --query taskDefinition > taskdef.json
+            --task-definition $TASK_FAMILY \
+            --query taskDefinition > taskdef.json
 
       - name: Update Image
         run: |
-          jq '.containerDefinitions[0].image="'$ACCOUNT_ID'.dkr.ecr.'$AWS_REGION'.amazonaws.com/'$ECR_REPOSITORY':'${GITHUB_SHA}'"' taskdef.json > new-taskdef.json
+          jq --arg IMAGE "$ACCOUNT_ID.dkr.ecr.$AWS_REGION.amazonaws.com/$ECR_REPOSITORY:$GITHUB_SHA" \
+             '.containerDefinitions[0].image = $IMAGE' taskdef.json > new-taskdef.json
 
       - name: Register New Task Definition
         run: |
           aws ecs register-task-definition \
-          --cli-input-json file://new-taskdef.json
+            --cli-input-json file://new-taskdef.json

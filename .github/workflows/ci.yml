@@ -1,0 +1,49 @@
+name: CI - Build and Push Image
+
+on:
+  push:
+    branches:
+      - main
+
+env:
+  AWS_REGION: us-east-1
+  ECR_REPOSITORY: strapi-repo
+  ACCOUNT_ID: 811738710312
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+
+    outputs:
+      image_tag: ${{ steps.set_tag.outputs.tag }}
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Set Image Tag
+        id: set_tag
+        run: echo "tag=${GITHUB_SHA}" >> $GITHUB_OUTPUT
+
+      - name: Configure AWS
+        uses: aws-actions/configure-aws-credentials@v4
+        with:
+          aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
+          aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+          aws-region: ${{ env.AWS_REGION }}
+
+      - name: Login to ECR
+        uses: aws-actions/amazon-ecr-login@v2
+
+      - name: Build Image
+        run: |
+          docker build -t $ECR_REPOSITORY:${{ steps.set_tag.outputs.tag }} .
+
+      - name: Tag Image
+        run: |
+          docker tag $ECR_REPOSITORY:${{ steps.set_tag.outputs.tag }} \
+          $ACCOUNT_ID.dkr.ecr.$AWS_REGION.amazonaws.com/$ECR_REPOSITORY:${{ steps.set_tag.outputs.tag }}
+
+      - name: Push Image
+        run: |
+          docker push $ACCOUNT_ID.dkr.ecr.$AWS_REGION.amazonaws.com/$ECR_REPOSITORY:${{ steps.set_tag.outputs.tag }}

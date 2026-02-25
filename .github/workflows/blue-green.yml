@@ -1,0 +1,44 @@
+name: Blue-Green Deployment
+
+on:
+  workflow_run:
+    workflows: ["CD - Register ECS Task Definition"]
+    types:
+      - completed
+
+env:
+  AWS_REGION: us-east-1
+  CODEDEPLOY_APP: strapi-bluegreen-codedeploy-app
+  CODEDEPLOY_GROUP: strapi-bluegreen-dg
+  TASK_FAMILY: strapi-bluegreen-task1
+
+jobs:
+  bluegreen:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Configure AWS
+        uses: aws-actions/configure-aws-credentials@v4
+        with:
+          aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
+          aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+          aws-region: ${{ env.AWS_REGION }}
+
+      - name: Get Latest Task Definition ARN
+        id: taskdef
+        run: |
+          ARN=$(aws ecs describe-task-definition \
+          --task-definition $TASK_FAMILY \
+          --query taskDefinition.taskDefinitionArn \
+          --output text)
+          echo "arn=$ARN" >> $GITHUB_OUTPUT
+
+      - name: Create Deployment
+        run: |
+          aws deploy create-deployment \
+          --application-name $CODEDEPLOY_APP \
+          --deployment-group-name $CODEDEPLOY_GROUP \
+          --revision revisionType=AppSpecContent,appSpecContent="{\"content\": \"version: 0.0\nResources:\n  - TargetService:\n      Type: AWS::ECS::Service\n      Properties:\n        TaskDefinition: ${{ steps.taskdef.outputs.arn }}\n        LoadBalancerInfo:\n          ContainerName: strapi\n          ContainerPort: 1337\"}"

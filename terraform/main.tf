@@ -31,3 +31,11 @@ module "codedeploy" {
   listener_arn       = module.alb.listener_arn
   codedeploy_role_arn = var.codedeploy_role_arn
 }
+module "rds" {
+  source      = "./modules/rds"
+  vpc_id      = module.network.vpc_id
+  subnet_ids  = module.network.subnet_ids
+  ecs_sg_id   = module.network.ecs_sg_id
+  rds_sg_id   = module.network.rds_sg_id
+  db_password = random_password.db_password.result
+}

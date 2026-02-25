@@ -1,17 +1,23 @@
- {
-  "version": 0.0,
-  "Resources": [
-    {
-      "TargetService": {
-        "Type": "AWS::ECS::Service",
-        "Properties": {
-          "TaskDefinition": "arn:aws:ecs:us-east-1:811738710312:task-definition/strapi-bluegreen-task1:1",
-          "LoadBalancerInfo": {
-            "ContainerName": "strapi",
-            "ContainerPort": 1337
-          }
-        }
+ aws deploy create-deployment \
+  --application-name my-strapi-codedeploy-app \
+  --deployment-group-name my-strapi-dg \
+  --revision '{
+      "revisionType": "AppSpecContent",
+      "appSpecContent": {
+          "version": 0.0,
+          "Resources": [
+              {
+                  "TargetService": {
+                      "Type": "AWS::ECS::Service",
+                      "Properties": {
+                          "TaskDefinition": "my-task-def",
+                          "LoadBalancerInfo": {
+                              "ContainerName": "strapi",
+                              "ContainerPort": 1337
+                          }
+                      }
+                  }
+              }
+          ]
       }
-    }
-  ]
-}
+  }'

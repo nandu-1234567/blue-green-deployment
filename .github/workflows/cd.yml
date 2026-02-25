@@ -1,0 +1,47 @@
+name: CD - Register ECS Task Definition
+
+on:
+  workflow_run:
+    workflows: ["CI - Build and Push Image"]
+    types:
+      - completed
+
+env:
+  AWS_REGION: us-east-1
+  ACCOUNT_ID: 811738710312
+  ECR_REPOSITORY: strapi-repo
+  TASK_FAMILY: strapi-bluegreen-task1
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Configure AWS
+        uses: aws-actions/configure-aws-credentials@v4
+        with:
+          aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
+          aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+          aws-region: ${{ env.AWS_REGION }}
+
+      - name: Get latest image tag
+        id: image
+        run: echo "tag=${GITHUB_SHA}" >> $GITHUB_OUTPUT
+
+      - name: Get Current Task Definition
+        run: |
+          aws ecs describe-task-definition \
+          --task-definition $TASK_FAMILY \
+          --query taskDefinition > taskdef.json
+
+      - name: Update Image
+        run: |
+          jq '.containerDefinitions[0].image="'$ACCOUNT_ID'.dkr.ecr.'$AWS_REGION'.amazonaws.com/'$ECR_REPOSITORY':'${GITHUB_SHA}'"' taskdef.json > new-taskdef.json
+
+      - name: Register New Task Definition
+        run: |
+          aws ecs register-task-definition \
+          --cli-input-json file://new-taskdef.json

@@ -1,0 +1,98 @@
+name: Strapi Blue-Green CI/CD
+
+on:
+  push:
+    branches:
+      - main
+
+env:
+  AWS_REGION: us-east-1
+  ECR_REPOSITORY: strapi-repo
+  ECS_CLUSTER: my-strapi-cluster1
+  ECS_SERVICE: my-strapi-service1
+  CODEDEPLOY_APP: my-strapi-codedeploy-app
+  CODEDEPLOY_GROUP: my-strapi-dg
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v3
+
+      - name: Configure AWS
+        uses: aws-actions/configure-aws-credentials@v2
+        with:
+          aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
+          aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+          aws-region: ${{ env.AWS_REGION }}
+
+      - name: Login to ECR
+        run: |
+          aws ecr get-login-password --region $AWS_REGION | \
+          docker login --username AWS --password-stdin \
+          ${{ secrets.AWS_ACCOUNT_ID }}.dkr.ecr.$AWS_REGION.amazonaws.com
+
+      - name: Build Image
+        run: docker build -t $ECR_REPOSITORY .
+
+      - name: Tag Image
+        run: |
+          docker tag $ECR_REPOSITORY:latest \
+          ${{ secrets.AWS_ACCOUNT_ID }}.dkr.ecr.$AWS_REGION.amazonaws.com/$ECR_REPOSITORY:latest
+
+      - name: Push Image
+        run: |
+          docker push \
+          ${{ secrets.AWS_ACCOUNT_ID }}.dkr.ecr.$AWS_REGION.amazonaws.com/$ECR_REPOSITORY:latest
+
+      - name: Create AppSpec File
+        run: |
+          cat <<EOF > appspec.json
+          {
+            "version": 1,
+            "Resources": [
+              {
+                "TargetService": {
+                  "Type": "AWS::ECS::Service",
+                  "Properties": {
+                    "TaskDefinition": "REPLACE_TASK_DEF",
+                    "LoadBalancerInfo": {
+                      "ContainerName": "strapi",
+                      "ContainerPort": 1337
+                    }
+                  }
+                }
+              }
+            ]
+          }
+          EOF
+
+      - name: Register New Task Definition
+        id: taskdef
+        run: |
+          TASK_DEF=$(aws ecs register-task-definition \
+            --family strapi-task1 \
+            --network-mode awsvpc \
+            --requires-compatibilities FARGATE \
+            --cpu 512 \
+            --memory 1024 \
+            --execution-role-arn ${{ secrets.EXECUTION_ROLE_ARN }} \
+            --container-definitions "[{\"name\":\"strapi\",\"image\":\"${{ secrets.AWS_ACCOUNT_ID }}.dkr.ecr.$AWS_REGION.amazonaws.com/$ECR_REPOSITORY:latest\",\"portMappings\":[{\"containerPort\":1337,\"hostPort\":1337}]}]" \
+            --query "taskDefinition.taskDefinitionArn" \
+            --output text)
+
+          echo "TASK_DEF=$TASK_DEF" >> $GITHUB_ENV
+
+      - name: Replace Task Definition in AppSpec
+        run: |
+          sed -i "s|REPLACE_TASK_DEF|$TASK_DEF|g" appspec.json
+
+      - name: Deploy via CodeDeploy
+        run: |
+          aws deploy create-deployment \
+            --application-name $CODEDEPLOY_APP \
+            --deployment-group-name $CODEDEPLOY_GROUP \
+            --deployment-config-name CodeDeployDefault.ECSCanary10Percent5Minutes \
+            --revision revisionType=AppSpecContent,appSpecContent="{content=$(cat appspec.json)}"

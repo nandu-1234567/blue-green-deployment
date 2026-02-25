@@ -12,6 +12,7 @@ env:
   ECS_SERVICE: my-strapi-service1
   CODEDEPLOY_APP: my-strapi-codedeploy-app
   CODEDEPLOY_GROUP: my-strapi-dg
+  AWS_ACCOUNT_ID:  811738710312
 
 jobs:
   deploy:
@@ -30,9 +31,9 @@ jobs:
 
       - name: Login to ECR
         run: |
-         aws ecr get-login-password --region $aws_region | \
+         aws ecr get-login-password --region $AWS_REGION | \
          docker login --username AWS --password-stdin \
-         $AWS_ACCOUNT_ID.dkr.ecr.$aws_region.amazonaws.com
+         $AWS_ACCOUNT_ID.dkr.ecr.$AWS_REGION.amazonaws.com
 
       - name: Build Image
         run: docker build -t $ECR_REPOSITORY .

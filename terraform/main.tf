@@ -9,7 +9,7 @@ module "alb" {
   vpc_id       = module.network.vpc_id
   subnet_ids   = var.subnet_ids
   alb_sg_id    = var.alb_sg_id
-
+}
 module "ecs" {
   source               = "./modules/ecs"
   project_name         = var.project_name

@@ -1,0 +1,58 @@
+{
+    "taskDefinition": {
+        "taskDefinitionArn": "arn:aws:ecs:us-east-1:811738710312:task-definition/strapi-bluegreen-task1:1",
+        "containerDefinitions": [
+            {
+                "name": "strapi",
+                "image": "811738710312.dkr.ecr.us-east-1.amazonaws.com/strapi-repo:latest",
+                "cpu": 0,
+                "portMappings": [
+                    {
+                        "containerPort": 1337,
+                        "hostPort": 1337,
+                        "protocol": "tcp"
+                    }
+                ],
+                "essential": true,
+                "environment": [],
+                "mountPoints": [],
+                "volumesFrom": [],
+                "systemControls": []
+            }
+        ],
+        "family": "strapi-bluegreen-task1",
+        "executionRoleArn": "arn:aws:iam::811738710312:role/ecs_fargate_taskRole",
+        "networkMode": "awsvpc",
+        "revision": 1,
+        "volumes": [],
+        "status": "ACTIVE",
+        "requiresAttributes": [
+            {
+                "name": "com.amazonaws.ecs.capability.ecr-auth"
+            },
+            {
+                "name": "ecs.capability.execution-role-ecr-pull"
+            },
+            {
+                "name": "com.amazonaws.ecs.capability.docker-remote-api.1.18"
+            },
+            {
+                "name": "ecs.capability.task-eni"
+            }
+        ],
+        "placementConstraints": [],
+        "compatibilities": [
+            "EC2",
+            "FARGATE",
+            "MANAGED_INSTANCES"
+        ],
+        "requiresCompatibilities": [
+            "FARGATE"
+        ],
+        "cpu": "512",
+        "memory": "1024",
+        "registeredAt": "2026-02-25T15:29:59.386000+05:30",
+        "registeredBy": "arn:aws:iam::811738710312:user/Balla_Hima_Nandini"
+    },
+    "tags": []
+}

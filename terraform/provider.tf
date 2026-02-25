@@ -1,6 +1,6 @@
 terraform {
     backend "s3" {
-        bucket         = "strapi-bucket-1771921864"   
+        bucket         = "strapi-terraform-state-2026-unique"   
         key            = "bluegreen/terraform.tfstate"
         region         = "us-east-1"
         encrypt        = true

@@ -7,8 +7,8 @@ module "alb" {
   source      = "./modules/alb"
   project_name = var.project_name
   vpc_id       = module.network.vpc_id
-  subnet_ids   = var.subnet_ids
-  alb_sg_id    = var.alb_sg_id
+  subnet_ids   = module.network.subnet_ids
+  alb_sg_id    = module.network.alb_sg_id
 }
 module "ecs" {
   source               = "./modules/ecs"

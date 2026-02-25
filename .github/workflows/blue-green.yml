@@ -35,9 +35,8 @@ jobs:
          docker login --username AWS --password-stdin \
          $AWS_ACCOUNT_ID.dkr.ecr.$AWS_REGION.amazonaws.com
 
-      - name: Build Image
-        run: docker build -t $ECR_REPOSITORY .
-
+      - name: Build Docker image
+        run: docker build -t $ECR_REPOSITORY ./my-strapi-app
       - name: Tag Image
         run: |
           docker tag $ECR_REPOSITORY:latest \

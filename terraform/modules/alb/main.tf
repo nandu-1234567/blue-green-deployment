@@ -2,7 +2,7 @@
 resource "aws_lb" "this" {
   name               = "${var.project_name}-alb"
   load_balancer_type = "application"
-  subnets = data.aws_subnets.existing.ids
+  subnets = ["subnet-0c64c1e6bddcf556e", "subnet-0becf9d295f5cd93a" ]
   security_groups    = [var.alb_sg_id]
 }
 

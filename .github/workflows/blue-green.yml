@@ -36,9 +36,15 @@ jobs:
           --output text)
           echo "arn=$ARN" >> $GITHUB_OUTPUT
 
-      - name: Create Deployment
+      - name: Deploy via CodeDeploy
         run: |
           aws deploy create-deployment \
-          --application-name $CODEDEPLOY_APP \
-          --deployment-group-name $CODEDEPLOY_GROUP \
-          --revision revisionType=AppSpecContent,appSpecContent="{\"content\": \"version: 0.0\nResources:\n  - TargetService:\n      Type: AWS::ECS::Service\n      Properties:\n        TaskDefinition: ${{ steps.taskdef.outputs.arn }}\n        LoadBalancerInfo:\n          ContainerName: strapi\n          ContainerPort: 1337\"}"
+           --application-name "$CODEDEPLOY_APP" \
+           --deployment-group-name "$CODEDEPLOY_GROUP" \
+           --revision "revisionType=AppSpecContent,appSpecContent=$(python -c 'import json; print(json.dumps(json.load(open(\"terraform/ecs/appspec.json\"))))')"
+       env:
+          AWS_REGION: ${{ env.AWS_REGION }}
+          CODEDEPLOY_APP: strapi-bluegreen-codedeploy-app
+          CODEDEPLOY_GROUP: strapi-bluegreen-dg
+          AWS_ACCESS_KEY_ID: ${{ secrets.AWS_ACCESS_KEY_ID }}
+          AWS_SECRET_ACCESS_KEY: ${{ secrets.AWS_SECRET_ACCESS_KEY }}

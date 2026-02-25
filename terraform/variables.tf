@@ -18,3 +18,6 @@ variable "codedeploy_role_arn" {
   description = "ARN of the CodeDeploy role"
   type        = string
 }
+variable "alb_sg_id" {
+  type = string
+}
